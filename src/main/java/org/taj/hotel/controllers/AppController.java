@@ -6,9 +6,12 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.taj.hotel.controllers.views.HotelBookingView;
 import org.taj.hotel.domain.Booking;
 import org.taj.hotel.domain.Hotel;
+import org.taj.hotel.exceptions.InsufficientRoomsException;
 import org.taj.hotel.exceptions.InvalidCityNameException;
+import org.taj.hotel.exceptions.InvalidRoomIdException;
 import org.taj.hotel.exceptions.NoBookingsException;
 import org.taj.hotel.service.BookingService;
 import org.taj.hotel.service.HotelService;
@@ -28,7 +31,7 @@ public class AppController {
     this.bookingService = bookingService;
   }
 
-  @GetMapping("/search/hotels")
+  @GetMapping("search/hotels")
   public ResponseEntity<ApiResponse<?>> searchHotels(@RequestParam String city) {
     try {
       List<Hotel> hotels = hotelService.findHotelsByCity(city);
@@ -39,7 +42,7 @@ public class AppController {
     }
   }
 
-  @GetMapping("/bookings")
+  @GetMapping("bookings")
   public ResponseEntity<ApiResponse<?>> serveBookings() {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     String currentUser = authentication.getName();
@@ -50,5 +53,19 @@ public class AppController {
       return ResponseEntity.status(HttpStatus.BAD_REQUEST)
               .body(ApiResponse.error(new ApiError(e.getMessage())));
     }
+  }
+
+  @PostMapping("bookings")
+  public ResponseEntity<ApiResponse<?>> bookHotel(@RequestBody HotelBookingView hotelBookingView) {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    String currentUser = authentication.getName();
+    try {
+      bookingService.bookRoom(currentUser, hotelBookingView.hotelId(),
+              hotelBookingView.noOfRooms());
+    } catch (InsufficientRoomsException | InvalidRoomIdException e) {
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+              .body(ApiResponse.error(new ApiError(e.getMessage())));
+    }
+    return ResponseEntity.ok(ApiResponse.success("Room Booked Successfully"));
   }
 }

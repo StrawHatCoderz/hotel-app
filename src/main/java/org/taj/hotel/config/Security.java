@@ -2,78 +2,133 @@ package org.taj.hotel.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.taj.hotel.filter.LoggingFilter;
+import org.taj.hotel.filter.JwtAuthenticationFilter;
+import org.taj.hotel.repositry.UserRepo;
 import org.taj.hotel.service.AppUserDetailService;
+import org.taj.hotel.service.IdGenerator;
+import org.taj.hotel.service.JWTService;
 
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Configuration
-@EnableWebSecurity
 public class Security {
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity, LoggingFilter loggingFilter) {
-        httpSecurity
-                .cors(Customizer.withDefaults())
-                .csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(auth ->
-                        auth.requestMatchers("/api/auth/register").permitAll()
-                                .requestMatchers("/login").permitAll()
-                                .requestMatchers("/api/search/*").permitAll()
-                                .anyRequest().authenticated())
-                .formLogin(fl -> fl.loginProcessingUrl("/login"));
+  @Bean
+  public JwtAuthenticationFilter jwtAuthenticationFilter(
+          JWTService jwtService,
+          AppUserDetailService appUserDetailService
+  ) {
 
+    return new JwtAuthenticationFilter(
+            jwtService,
+            appUserDetailService
+    );
+  }
 
-        return httpSecurity.build();
-    }
+  @Bean
+  public SecurityFilterChain securityFilterChain(
+          HttpSecurity http,
+          JwtAuthenticationFilter jwtAuthenticationFilter
+  ) throws Exception {
 
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration corsConfiguration = new CorsConfiguration();
-        corsConfiguration.setAllowedOrigins(List.of("http://localhost:3000", "http://localhost:4000"));
-        corsConfiguration.setAllowedMethods(List.of("GET", "POST", "PATCH", "OPTIONS", "DELETE", "PUT"));
+    http
+            .csrf(csrf -> csrf.disable())
+            .cors(Customizer.withDefaults())
+            .sessionManagement(session ->
+                    session.sessionCreationPolicy(
+                            SessionCreationPolicy.STATELESS
+                    )
+            )
+            .authorizeHttpRequests(auth ->
+                    auth
+                            .requestMatchers(
+                                    "/api/users/register",
+                                    "/api/users/login",
+                                    "/api/search/*"
+                            )
+                            .permitAll()
+                            .anyRequest()
+                            .authenticated()
+            )
+            .addFilterBefore(
+                    jwtAuthenticationFilter,
+                    UsernamePasswordAuthenticationFilter.class
+            );
 
-        corsConfiguration.setAllowedHeaders(List.of("*"));
-        corsConfiguration.setAllowCredentials(true);
+    return http.build();
+  }
 
-        UrlBasedCorsConfigurationSource source =
-                new UrlBasedCorsConfigurationSource();
+  @Bean
+  public AuthenticationManager authenticationManager(
+          AuthenticationConfiguration config
+  ) throws Exception {
 
-        source.registerCorsConfiguration("/**", corsConfiguration);
+    return config.getAuthenticationManager();
+  }
 
-        return source;
-    }
+  @Bean
+  public AppUserDetailService appUserDetailService(
+          UserRepo userRepo,
+          PasswordEncoder passwordEncoder,
+          IdGenerator idGenerator
+  ) {
 
-    @Bean
-    public AppUserDetailService appUserDetailService(PasswordEncoder passwordEncoder) {
-        ConcurrentHashMap<String, UserDetails> users = new ConcurrentHashMap<>();
-        UserDetails user = User.builder()
-                .passwordEncoder(passwordEncoder::encode)
-                .username("deadpool")
-                .password("tesco")
-                .roles("USER", "ADMIN")
-                .build();
+    return new AppUserDetailService(
+            userRepo,
+            passwordEncoder,
+            idGenerator
+    );
+  }
 
-        users.put(user.getUsername(), user);
+  @Bean
+  public PasswordEncoder passwordEncoder() {
+    return new BCryptPasswordEncoder();
+  }
 
-        return new AppUserDetailService(users, passwordEncoder);
-    }
+  @Bean
+  public CorsConfigurationSource corsConfigurationSource() {
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+    CorsConfiguration cors = new CorsConfiguration();
+
+    cors.setAllowedOrigins(
+            List.of(
+                    "http://localhost:3000",
+                    "http://localhost:4000"
+            )
+    );
+
+    cors.setAllowedMethods(
+            List.of(
+                    "GET",
+                    "POST",
+                    "PUT",
+                    "DELETE",
+                    "PATCH",
+                    "OPTIONS"
+            )
+    );
+
+    cors.setAllowedHeaders(List.of("*"));
+
+    cors.setAllowCredentials(true);
+
+    UrlBasedCorsConfigurationSource source =
+            new UrlBasedCorsConfigurationSource();
+
+    source.registerCorsConfiguration("/**", cors);
+
+    return source;
+  }
 }

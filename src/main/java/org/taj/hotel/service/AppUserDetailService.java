@@ -1,37 +1,45 @@
 package org.taj.hotel.service;
 
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
-
-import java.util.concurrent.ConcurrentHashMap;
+import org.taj.hotel.domain.User;
+import org.taj.hotel.repositry.UserRepo;
+import org.taj.hotel.view.UserRegistrationRequest;
 
 public class AppUserDetailService implements UserDetailsService {
-    private final ConcurrentHashMap<String, UserDetails> users;
+    private final UserRepo users;
     private final PasswordEncoder passwordEncoder;
+    private IdGenerator idGenerator;
 
-    public AppUserDetailService(ConcurrentHashMap<String, UserDetails> users, PasswordEncoder passwordEncoder) {
+    public AppUserDetailService(UserRepo users, PasswordEncoder passwordEncoder, IdGenerator idGenerator) {
         this.users = users;
         this.passwordEncoder = passwordEncoder;
+        this.idGenerator = idGenerator;
     }
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        UserDetails userDetails = this.users.get(username);
-        if(userDetails == null) throw new UsernameNotFoundException("Username {} not found".formatted(username));
-        return userDetails;
+    public UserDetails loadUserByUsername(String username)
+            throws UsernameNotFoundException {
+
+        User user = users.findByUsername(username);
+
+        if (user == null) throw new UsernameNotFoundException("Username %s not found".formatted(username));
+
+        return org.springframework.security.core.userdetails.User.builder()
+                .username(user.getUsername())
+                .password(user.getPassword())
+                .authorities("USER")
+                .build();
     }
 
-    public void registerUser(org.taj.hotel.view.UserRegistrationRequest request) {
-        UserDetails user = User.builder()
-                .passwordEncoder(this.passwordEncoder::encode)
-                .username(request.username())
-                .password(request.password())
-                .roles("USER")
-                .build();
+    public void registerUser(UserRegistrationRequest request) {
 
-        this.users.put(user.getUsername(), user);
+        String id = this.idGenerator.generate();
+
+        User user = new User(id, request.username(), passwordEncoder.encode(request.password()));
+
+        this.users.save(user);
     }
 }

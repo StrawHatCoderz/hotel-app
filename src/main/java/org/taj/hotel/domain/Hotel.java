@@ -47,8 +47,8 @@ public class Hotel {
     return availableRooms;
   }
 
-  public void setAvailableRooms(int availableRooms) {
-    this.availableRooms = availableRooms;
+  public void setAvailableRooms(int noOfRooms) {
+    this.availableRooms = this.availableRooms - noOfRooms;
   }
 
   @Override
@@ -59,5 +59,9 @@ public class Hotel {
             ", totalRooms=" + totalRooms +
             ", availableRooms=" + availableRooms +
             '}';
+  }
+
+  public boolean canBook(int noOfRooms) {
+    return availableRooms >= noOfRooms;
   }
 }
