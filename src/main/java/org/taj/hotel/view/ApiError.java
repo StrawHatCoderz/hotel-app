@@ -1,4 +1,4 @@
-package org.taj.hotel.views;
+package org.taj.hotel.view;
 
 public record ApiError(String message) {
 }
