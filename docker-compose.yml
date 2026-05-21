@@ -1,0 +1,31 @@
+services:
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    ports:
+      - "8000:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - app1
+
+  app1:
+    build: .
+    container_name: app1
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://mongo:27017/hoteldb
+    depends_on:
+      - mongo
+
+  mongo:
+    image: mongo:7
+    container_name: mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+
+volumes:
+  mongo-data:

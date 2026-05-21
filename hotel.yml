@@ -1,0 +1,143 @@
+opencollection: 1.0.0
+info:
+  name: Hotel App
+config:
+  proxy:
+    inherit: true
+    config:
+      protocol: http
+      hostname: ''
+      port: ''
+      auth:
+        username: ''
+        password: ''
+      bypassProxy: ''
+items:
+  - info:
+      name: Search Hotel
+      type: http
+      seq: 1
+    http:
+      method: get
+      url: http://localhost:3000/api/search/hotels?city=New%20York
+      params:
+        - name: city
+          value: New%20York
+          type: query
+      auth: inherit
+    settings:
+      encodeUrl: false
+      timeout: 0
+      followRedirects: true
+      maxRedirects: 5
+  - info:
+      name: Signup
+      type: http
+      seq: 2
+    http:
+      method: post
+      url: http://localhost:3000/api/users/register
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "username": "testuser",
+            "password": "password123"
+          }
+      auth: inherit
+    settings:
+      encodeUrl: false
+      timeout: 0
+      followRedirects: true
+      maxRedirects: 5
+  - info:
+      name: sginin
+      type: http
+      seq: 4
+    http:
+      method: post
+      url: http://localhost:3000/api/users/login
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "username": "testuser",
+            "password": "password123"
+          }
+      auth: inherit
+    settings:
+      encodeUrl: false
+      timeout: 0
+      followRedirects: true
+      maxRedirects: 5
+  - info:
+      name: List Booking
+      type: http
+      seq: 6
+    http:
+      method: get
+      url: http://localhost:3000/api/bookings
+      headers:
+        - name: Authorization
+          value: 'Bearer '
+      auth: inherit
+    settings:
+      encodeUrl: false
+      timeout: 0
+      followRedirects: true
+      maxRedirects: 5
+  - info:
+      name: Book Hotel
+      type: http
+      seq: 7
+    http:
+      method: post
+      url: http://localhost:3000/api/bookings
+      headers:
+        - name: Authorization
+          value: 'Bearer '
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "hotel_id": 1,
+            "rooms": 1
+          }
+      auth: inherit
+    settings:
+      encodeUrl: false
+      timeout: 0
+      followRedirects: true
+      maxRedirects: 5
+  - info:
+      name: Download receipt
+      type: http
+      seq: 8
+    http:
+      method: get
+      url: http://localhost:3000/api/bookings/1/receiptreceipt.pdf
+      headers:
+        - name: Authorization
+          value: 'Bearer '
+      auth: inherit
+    settings:
+      encodeUrl: false
+      timeout: 0
+      followRedirects: true
+      maxRedirects: 5
+bundled: true
+extensions:
+  bruno:
+    ignore:
+      - node_modules
+      - .git
+    exportedAt: '2026-05-20T07:17:53.438Z'
+    exportedUsing: Bruno
