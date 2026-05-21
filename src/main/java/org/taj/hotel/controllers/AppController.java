@@ -34,7 +34,7 @@ public class AppController {
   @GetMapping("search/hotels")
   public ResponseEntity<ApiResponse<?>> searchHotels(@RequestParam String city) {
     try {
-      List<Hotel> hotels = hotelService.findHotelsByCity(city);
+      List<Hotel> hotels = hotelService.findHotelsByCity(city.toLowerCase());
       return ResponseEntity.ok(ApiResponse.success(hotels));
     } catch (InvalidCityNameException e) {
       return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -60,8 +60,8 @@ public class AppController {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     String currentUser = authentication.getName();
     try {
-      bookingService.bookRoom(currentUser, hotelBookingView.hotelId(),
-              hotelBookingView.noOfRooms());
+      bookingService.bookRoom(currentUser, hotelBookingView.hotel_id(),
+              hotelBookingView.rooms());
     } catch (InsufficientRoomsException | InvalidRoomIdException e) {
       return ResponseEntity.status(HttpStatus.BAD_REQUEST)
               .body(ApiResponse.error(new ApiError(e.getMessage())));

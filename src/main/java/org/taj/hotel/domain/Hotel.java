@@ -1,22 +1,20 @@
 package org.taj.hotel.domain;
 
-import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.Objects;
 
 @Document
 public class Hotel {
-  @Id
-  private final String id;
+  private final String hotelId;
 
   private final String name;
   private final String city;
   private final int totalRooms;
   private int availableRooms;
 
-  public Hotel(String id, String name, String city, int totalRooms) {
-    this.id = id;
+  public Hotel(String hotelId, String name, String city, int totalRooms) {
+    this.hotelId = hotelId;
     this.name = name;
     this.city = city;
     this.totalRooms = totalRooms;
@@ -27,24 +25,12 @@ public class Hotel {
   public boolean equals(Object o) {
     if (o == null || getClass() != o.getClass()) return false;
     Hotel hotel = (Hotel) o;
-    return totalRooms == hotel.totalRooms && availableRooms == hotel.availableRooms && Objects.equals(id, hotel.id) && Objects.equals(name, hotel.name);
+    return totalRooms == hotel.totalRooms && availableRooms == hotel.availableRooms && Objects.equals(hotelId, hotel.hotelId) && Objects.equals(name, hotel.name);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, name, totalRooms, availableRooms);
-  }
-
-  public String getName() {
-    return name;
-  }
-
-  public int getTotalRooms() {
-    return totalRooms;
-  }
-
-  public int getAvailableRooms() {
-    return availableRooms;
+    return Objects.hash(hotelId, name, totalRooms, availableRooms);
   }
 
   public void setAvailableRooms(int noOfRooms) {
@@ -54,7 +40,7 @@ public class Hotel {
   @Override
   public String toString() {
     return "Hotel{" +
-            "id='" + id + '\'' +
+            "id='" + hotelId + '\'' +
             ", name='" + name + '\'' +
             ", totalRooms=" + totalRooms +
             ", availableRooms=" + availableRooms +
