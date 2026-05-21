@@ -17,6 +17,7 @@ import org.taj.hotel.service.BookingService;
 import org.taj.hotel.service.HotelService;
 import org.taj.hotel.view.ApiError;
 import org.taj.hotel.view.ApiResponse;
+import org.taj.hotel.view.BookingView;
 
 import java.util.List;
 
@@ -67,5 +68,13 @@ public class AppController {
               .body(ApiResponse.error(new ApiError(e.getMessage())));
     }
     return ResponseEntity.ok(ApiResponse.success("Room Booked Successfully"));
+  }
+
+  @GetMapping("bookings/{bookingId}/receiptreceipt.pdf")
+  public ResponseEntity<ApiResponse<?>> generatePDF(@PathVariable String bookingId) {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    String currentUser = authentication.getName();
+    BookingView json = bookingService.toJSON(bookingId);
+    return ResponseEntity.ok(ApiResponse.success(json));
   }
 }

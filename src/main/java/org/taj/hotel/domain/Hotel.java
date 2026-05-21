@@ -1,11 +1,15 @@
 package org.taj.hotel.domain;
 
+import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.Objects;
 
 @Document
 public class Hotel {
+  @Id
+  private String id;
+
   private final String hotelId;
 
   private final String name;
@@ -49,5 +53,9 @@ public class Hotel {
 
   public boolean canBook(int noOfRooms) {
     return availableRooms >= noOfRooms;
+  }
+
+  public String getName() {
+    return name;
   }
 }
